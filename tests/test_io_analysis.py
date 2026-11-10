@@ -120,7 +120,7 @@ class CLITests(unittest.TestCase):
                 self.assertTrue((Path(d) / name).exists(), name)
             data = json.loads((Path(d) / "sonuclar.json").read_text(encoding="utf-8"))
             faults = {a["algoritma"]: a["sayfa_hatasi"] for a in data["algoritmalar"]}
-            self.assertEqual(faults, {"FIFO": 13, "LRU": 11, "OPT": 8, "CLOCK": 12, "LFU": 10})
+            self.assertEqual(faults, {"FIFO": 13, "LRU": 11, "OPT": 8, "CLOCK": 12, "LFU": 10, "AGING": 12})
 
     def test_html_report_is_self_contained(self):
         with tempfile.TemporaryDirectory() as d:

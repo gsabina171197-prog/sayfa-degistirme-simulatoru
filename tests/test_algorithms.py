@@ -73,6 +73,9 @@ class GroupScenarioTests(unittest.TestCase):
     def test_lfu(self):
         self.assertEqual(faults("lfu", GROUP, 3), 10)
 
+    def test_aging(self):
+        self.assertEqual(faults("aging", GROUP, 3), 12)
+
     def test_fifo_eviction_sequence(self):
         evicted = [s.evicted for s in create("fifo").run(GROUP, 3).steps if s.evicted is not None]
         self.assertEqual(evicted, [3, 5, 0, 6, 1, 5, 3, 4, 2, 1])
@@ -107,6 +110,33 @@ class ClockTests(unittest.TestCase):
         self.assertLess(faults("clock", refs, 3), faults("fifo", refs, 3))
 
 
+class AgingTests(unittest.TestCase):
+    def test_counter_shift_on_tick(self):
+        from simulator.aging import Aging
+        algo = Aging(bits=8, period=1)
+        r = algo.run([1, 2, 1], 2)
+        # after 3 ticks: 1 referenced at t0 and t2 -> 10100000, 2 at t1 -> 01000000
+        self.assertIn("1:0|10100000", r.steps[-1].note)
+        self.assertIn("2:0|01000000", r.steps[-1].note)
+
+    def test_evicts_oldest_history(self):
+        r = create("aging").run([1, 2, 1, 1, 3], 2)
+        self.assertEqual(r.steps[-1].evicted, 2)
+
+    def test_long_history_aging_equals_lru(self):
+        from simulator.aging import Aging
+        rng = random.Random(5)
+        for _ in range(100):
+            refs = [rng.randrange(6) for _ in range(rng.randint(1, 30))]
+            k = rng.randint(1, 5)
+            self.assertEqual(Aging(bits=64, period=1).run(refs, k).faults, naive_lru(refs, k), (refs, k))
+
+    def test_invalid_parameters(self):
+        from simulator.aging import Aging
+        with self.assertRaises(ValueError):
+            Aging(bits=0)
+
+
 class LFUTests(unittest.TestCase):
     def test_tie_broken_by_load_order(self):
         r = create("lfu").run([1, 2, 3, 4], 3)
@@ -118,7 +148,7 @@ class LFUTests(unittest.TestCase):
 
 
 class EdgeCaseTests(unittest.TestCase):
-    ALGOS = ["fifo", "lru", "optimal", "clock", "lfu"]
+    ALGOS = ["fifo", "lru", "optimal", "clock", "lfu", "aging"]
 
     def test_single_frame_faults_on_every_change(self):
         refs = [1, 1, 2, 2, 1, 3, 3, 3, 1]
@@ -187,7 +217,7 @@ class RandomCrossCheckTests(unittest.TestCase):
     def test_optimal_is_lower_bound(self):
         for refs, k in self.scenarios():
             opt = faults("optimal", refs, k)
-            for key in ("fifo", "lru", "clock", "lfu"):
+            for key in ("fifo", "lru", "clock", "lfu", "aging"):
                 self.assertLessEqual(opt, faults(key, refs, k), (key, refs, k))
 
     def test_stack_algorithms_never_show_belady(self):
