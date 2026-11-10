@@ -43,13 +43,16 @@ class SimulationResult:
     references: Tuple[int, ...]
     frame_count: int
     steps: List[Step] = field(default_factory=list)
+    fault_count: Optional[int] = None   # set when steps are not recorded (fast mode)
 
     @property
     def total(self) -> int:
-        return len(self.steps)
+        return len(self.references)
 
     @property
     def faults(self) -> int:
+        if self.fault_count is not None:
+            return self.fault_count
         return sum(1 for s in self.steps if not s.hit)
 
     @property
@@ -66,6 +69,8 @@ class SimulationResult:
 
     @property
     def evictions(self) -> int:
+        if not self.steps:
+            return self.faults - min(self.frame_count, len(set(self.references)))
         return sum(1 for s in self.steps if s.evicted is not None)
 
     def summary(self) -> Dict[str, object]:
@@ -134,12 +139,16 @@ class PageReplacementAlgorithm(ABC):
         return ""
 
     # ---- driver -----------------------------------------------------------
-    def run(self, references: Sequence[int], frame_count: int) -> SimulationResult:
+    def run(self, references: Sequence[int], frame_count: int,
+            record: bool = True) -> SimulationResult:
+        """Simulate. With record=False only the fault count is kept (fast mode for
+        long traces and frame-range sweeps)."""
         refs = validate_input(references, frame_count)
         self.reset(refs, frame_count)
         slots: List[Optional[int]] = [None] * frame_count
         where: Dict[int, int] = {}  # page -> slot
         result = SimulationResult(self.name, self.short_name, refs, frame_count)
+        faults = 0
 
         for time, page in enumerate(refs):
             evicted: Optional[int] = None
@@ -149,6 +158,7 @@ class PageReplacementAlgorithm(ABC):
                 self.on_hit(page, time)
             else:
                 hit = False
+                faults += 1
                 if len(where) < frame_count:
                     slot = slots.index(None)
                 else:
@@ -162,9 +172,12 @@ class PageReplacementAlgorithm(ABC):
                 loaded_into = slot
                 self.on_load(page, time, slot)
             self.on_reference(page, time)
-            result.steps.append(
-                Step(time + 1, page, tuple(slots), hit, evicted, loaded_into, self.describe(slots))
-            )
+            if record:
+                result.steps.append(
+                    Step(time + 1, page, tuple(slots), hit, evicted, loaded_into, self.describe(slots))
+                )
+        if not record:
+            result.fault_count = faults
         return result
 
 
@@ -196,7 +209,7 @@ def create(key: str) -> PageReplacementAlgorithm:
 
 
 def run_all(references: Sequence[int], frame_count: int,
-            keys: Optional[Sequence[str]] = None) -> List[SimulationResult]:
+            keys: Optional[Sequence[str]] = None, record: bool = True) -> List[SimulationResult]:
     """Run several algorithms on exactly the same input."""
     keys = list(keys) if keys else available_algorithms()
-    return [create(k).run(references, frame_count) for k in keys]
+    return [create(k).run(references, frame_count, record) for k in keys]
