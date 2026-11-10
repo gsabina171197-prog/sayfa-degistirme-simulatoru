@@ -15,7 +15,7 @@ import sys
 from typing import List, Optional
 
 from simulator import SimulationError, __version__, available_algorithms, create, run_all
-from simulator import analysis, display, export
+from simulator import analysis, display, export, html_report
 from simulator.display import Style
 from simulator.input_io import WORKLOADS, generate, parse_references, read_reference_file
 
@@ -69,6 +69,7 @@ def build_parser() -> argparse.ArgumentParser:
     out.add_argument("--summary", "-s", action="store_true", help="adım tablolarını gösterme, sadece özet")
     out.add_argument("--no-notes", action="store_true", help="adım tablosunda algoritma durum sütununu gizle")
     out.add_argument("--no-color", action="store_true", help="renkli çıktıyı kapat")
+    out.add_argument("--open", action="store_true", help="HTML raporu tarayıcıda aç")
     p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     return p
 
@@ -96,9 +97,17 @@ def run_single(refs, args, out: Output) -> None:
     out(Style.bold("Sayfa hatası sayısı:"))
     out(display.bar_chart(results))
     if not args.no_export:
+        hi = max(args.frames, min(len(set(refs)), 10))
+        table = analysis.frame_range(refs, 1, hi, args.algo)
+        report = html_report.build(results, table, 1, analysis.detect_belady(table, 1),
+                                   source=args.file or ("--refs" if args.refs else f"rastgele (tohum {args.seed})"))
         paths = [export.write_steps_csv(results, args.out),
                  export.write_summary_csv(results, args.out),
-                 export.write_json(args.out, export.results_payload(results))]
+                 export.write_json(args.out, export.results_payload(results)),
+                 html_report.write(report, args.out)]
+        if args.open:
+            import webbrowser
+            webbrowser.open(paths[-1].resolve().as_uri())
         out()
         out(Style.dim("Dosyalar: " + ", ".join(str(p) for p in paths)))
 
@@ -183,8 +192,8 @@ def run_step(refs, args, out: Output) -> None:
 
 
 MENU = [
-    ("Örnek senaryo — adım tabloları ve karşılaştırma",
-     ["--file", "data/ornek.txt", "--frames", "3"]),
+    ("Örnek senaryo — 5 algoritma, adım tabloları, karşılaştırma, HTML rapor",
+     ["--file", "data/ornek.txt", "--frames", "3", "--open"]),
     ("Canlı adım adım demo (Enter ile ilerle)", ["--file", "data/ornek.txt", "--frames", "3", "--step"]),
     ("Belady anomalisi — çerçeve aralığı analizi", ["--file", "data/belady.txt", "--range", "1", "6"]),
     ("İş yükü performans analizi", ["--workloads", "--range", "2", "8", "--summary"]),
