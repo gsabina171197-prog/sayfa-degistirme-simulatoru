@@ -4,7 +4,7 @@
 **Teslim:** 11 Kasım 2026 09.00  
 **Tek sorumlu öğrenci:** Sabina Gasimova · 202303011138
 
-Grup çalışması sonlandığı için bu teslim bireysel yürütülmektedir. Ekip üyesi görevi veya katkısı varmış gibi gösterilmemiştir. **Bu tabloda “sorumlu” olmak, kodun her satırının yapay zekâ yardımı olmadan yazıldığı anlamına gelmez.**
+Grup çalışması sonlandığı için bu teslim bireysel yürütülmektedir. Ekip üyesi görevi veya katkısı varmış gibi gösterilmemiştir.
 
 | İş paketi | Sorumlu | Mevcut dosyalar | Kanıt / durum |
 |---|---|---|---|

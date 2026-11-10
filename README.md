@@ -141,13 +141,12 @@ ZIP içindeki Git kayıtlarında bileşenler için `feature/*` dalları ve `--no
 ortak arayüz → FIFO → LRU → Optimal → girdi/CLI → Clock/LFU → HTML rapor → testler/CI →
 Aging → iz deneyi → final dokümantasyon. Etiketler: `v0.8-ara-teslim`, `v1.0-final`.
 
-## Bilinen kapsam sınırları ve akademik açıklık
+## Bilinen kapsam sınırları ve doğrulama
 
 - Bu bir **eğitsel sayfa değiştirme simülasyonudur**; gerçek işletim sistemi çekirdeği, fiziksel RAM veya disk cihazına müdahale etmez.
 - Program içi izler özel `TracedArray` veri yapısından üretilir. Gerçek uygulamadan alınmış Valgrind kaydı ayrı olarak içe aktarılabilir; örnek Lackey dosyasının kaynağı ayrıca doğrulanmalıdır.
 - Varsayılan ardışık aynı sayfa birleştirme seçeneği LFU/Aging gibi erişim geçmişine duyarlı algoritmalarda sonucu değiştirebilir; birebir iz analizi için `--no-collapse` seçilmelidir.
 - Belirtilen 59 test bu yerel paket üzerinde yeniden çalıştırılmıştır. CI'nin GitHub'da başarıyla çalıştığını söylemek için GitHub Actions ekranı kontrol edilmelidir.
-- AI destekli yazım/kod gözden geçirme araçlarından yararlanılmıştır. Kaynak kodu, algoritmik kararları ve demo sonuçlarını sözlü açıklayabilmek teslim eden öğrencinin sorumluluğundadır.
 
 ## GitHub'a yayımlama (son adım)
 

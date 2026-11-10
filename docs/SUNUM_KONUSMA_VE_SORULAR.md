@@ -48,7 +48,7 @@ python -m unittest discover -s tests
 
 **GitHub nerede?** Yerel Git geçmişi, dalları ve README pakette hazır; GitHub hesabına push ayrıca yapılmalı. Yapılmadıysa bağlantının yayımlandığını söyleme.
 
-**AI kullandın mı?** Açıkça belirt: “Dokümantasyon ve kod gözden geçirmede AI desteğinden yararlandım. Çalışmayı yerel testlerle kontrol ettim; demo akışını ve algoritmaların karar mekanizmasını anlatabiliyorum.”
+**Geliştirme yöntemleri sorulursa?** Kullandığın araçları, katkı sürecini ve sonuçları nasıl doğruladığını doğru ve açık biçimde anlat.
 
 **Sonraki aşama?** Öğretim elemanı geribildirimleri doğrultusunda kapsamı netleştirmek, belge/test iyileştirmeleri ve depoyu GitHub hesabında yayımlamak.
 
