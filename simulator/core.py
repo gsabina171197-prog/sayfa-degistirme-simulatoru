@@ -122,6 +122,9 @@ class PageReplacementAlgorithm(ABC):
     def on_evict(self, page: int) -> None:
         """Called after `page` was removed from memory."""
 
+    def on_reference(self, page: int, time: int) -> None:
+        """Called once per reference, after the hit/miss handling (e.g. a clock tick)."""
+
     @abstractmethod
     def choose_victim(self, time: int, slots: List[Optional[int]]) -> int:
         """Return the resident page to evict (memory is full)."""
@@ -158,6 +161,7 @@ class PageReplacementAlgorithm(ABC):
                 where[page] = slot
                 loaded_into = slot
                 self.on_load(page, time, slot)
+            self.on_reference(page, time)
             result.steps.append(
                 Step(time + 1, page, tuple(slots), hit, evicted, loaded_into, self.describe(slots))
             )
