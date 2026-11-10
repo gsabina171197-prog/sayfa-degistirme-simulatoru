@@ -2,67 +2,47 @@
 
 BİM 361 İşletim Sistemleri dersi dönem projesi — Doğuş Üniversitesi, Yazılım Mühendisliği.
 
-**Hazırlayan:** Sabina Gasimova (202303011138) — tek kişilik proje
+**Hazırlayan:** Sabina Gasimova (202303011138) · **Sürüm:** 1.0 (final)
 
 ![testler](../../actions/workflows/tests.yml/badge.svg)
 
 Sanal bellekte fiziksel çerçeveler dolduğunda hangi sayfanın çıkarılacağına karar veren
-**FIFO, LRU, Optimal, Second Chance (Clock) ve LFU** algoritmalarını **aynı referans dizisi ve
-aynı çerçeve sayısı** üzerinde adım adım çalıştıran, karşılaştıran ve analiz eden komut satırı simülatörü.
+**FIFO, LRU, Optimal, Second Chance (Clock), LFU ve Aging** algoritmalarını **aynı referans dizisi
+ve aynı çerçeve sayısı** üzerinde adım adım çalıştıran, karşılaştıran ve gerçek program izleriyle
+deneyen komut satırı simülatörü.
 
-> **Sürüm 0.8 — ara teslim (11 Kasım 2026).** Projenin yaklaşık %80'i tamamlandı; kalan iş için bkz. [Yol haritası](#yol-haritası).
+## Özellikler
 
-## Mevcut durum
-
-| Bileşen | Durum |
+| Özellik | Açıklama |
 |---|---|
-| Ortak arayüz, veri modeli, algoritma kaydı | ✅ Tamamlandı |
-| Girdi okuma ve doğrulama (dosya, satır içi, rastgele) | ✅ Tamamlandı |
-| FIFO, LRU, Optimal | ✅ Tamamlandı ve test edildi |
-| Second Chance (Clock), LFU | ✅ Tamamlandı ve test edildi |
-| Adım adım bellek tablosu + karar açıklaması | ✅ Tamamlandı |
-| Etkileşimli HTML rapor (adım oynatıcı, grafik, tablolar) | ✅ Tamamlandı |
-| Argümansız çalıştırmada menü | ✅ Tamamlandı |
-| GitHub Actions: Ubuntu + Windows, Python 3.10 / 3.12 | ✅ Tamamlandı |
-| Karşılaştırma tablosu | ✅ Tamamlandı |
-| Çerçeve aralığı analizi + otomatik Belady anomalisi tespiti | ✅ Tamamlandı |
-| Canlı adım adım demo modu (`--step`) | ✅ Tamamlandı |
-| CSV / JSON / SVG grafik / çalışma logu dışa aktarımı | ✅ Tamamlandı |
-| İş yükü türlerine göre performans analizi | ✅ Tamamlandı |
-| Birim testleri | ✅ 43 test geçiyor |
-| Final raporu ve sunumu | ⏳ Final teslimi |
+| 6 algoritma | FIFO, LRU, Optimal, Clock, LFU, Aging — tek ortak arayüz |
+| Adım adım tablo | Her erişimde çerçeveler, HIT/MISS, çıkan sayfa ve algoritmanın karar gerekçesi |
+| Canlı demo | `--step`: her Enter'da bir erişim, altı algoritma yan yana |
+| Karşılaştırma | Hata, isabet, oranlar, Optimal'e fark |
+| Çerçeve aralığı analizi | Her çerçeve sayısı için hata, **Belady anomalisinin otomatik tespiti** |
+| Sentetik iş yükleri | Düzgün rastgele, yerellik, döngüsel tarama, karma (tekrarlanabilir) |
+| Gerçek program izleri | Matris (satır/sütun), matris çarpımı, quicksort, ikili arama; Valgrind Lackey izi okuma |
+| Çıktılar | Çalışma logu, CSV, JSON, SVG grafik (log ölçek), etkileşimli tek dosyalık HTML rapor |
+| Menü | Argümansız `python main.py` ile tüm senaryolar tek tuşla |
+| Test ve CI | 59 test; GitHub Actions ile Ubuntu + Windows, Python 3.10 / 3.12 |
 
 ## Gereksinimler
 
-Python 3.10 veya üstü. **Yalnızca standart kütüphane** kullanılır (`argparse`, `collections`,
-`csv`, `json`, `unittest`); ek paket kurulumu gerekmez. Linux, macOS ve Windows'ta çalışır.
+Python 3.10 veya üstü. **Yalnızca standart kütüphane** kullanılır; ek paket kurulumu gerekmez.
+Windows'ta `python` yerine `py`, bazı Linux sistemlerinde `python3` kullanın.
 
 ## Hızlı başlangıç
 
 ```bash
-# 0) Menü: argümansız çalıştırınca tüm senaryolar tek tuşla
-python main.py
-
-# 1) Test senaryosu: 5 algoritma, adım tabloları + karşılaştırma
-python main.py --file data/ornek.txt --frames 3
-
-# 1b) Aynısı + HTML raporu tarayıcıda aç
-python main.py --file data/ornek.txt --frames 3 --open
-
-# 2) Canlı demo: her Enter'da bir erişim, tüm algoritmalar yan yana
-python main.py --file data/ornek.txt --frames 3 --step
-
-# 3) Çerçeve aralığı analizi ve Belady anomalisi
-python main.py --file data/belady.txt --range 1 6
-
-# 4) Farklı iş yüklerinde performans analizi
-python main.py --workloads --range 2 8
-
-# 5) Testler
-python -m unittest discover -s tests -v
+python main.py                                          # menü
+python main.py --file data/ornek.txt --frames 3 --open  # test senaryosu + HTML rapor
+python main.py --file data/ornek.txt --frames 3 --step  # canlı adım adım demo
+python main.py --file data/belady.txt --range 1 6       # Belady anomalisi
+python main.py --workloads --range 2 8                  # sentetik iş yükleri
+python main.py --experiment                             # gerçek program izleri deneyi
+python main.py --trace data/izler/matris_carpim_8.lackey --page-size 256 --range 1 8
+python -m unittest discover -s tests                    # testler
 ```
-
-Windows'ta `python` yerine `py`, bazı Linux sistemlerinde `python3` kullanın.
 
 ## Komut satırı seçenekleri
 
@@ -70,115 +50,82 @@ Windows'ta `python` yerine `py`, bazı Linux sistemlerinde `python3` kullanın.
 |---|---|
 | `--file, -f DOSYA` | Referans dizisini dosyadan oku |
 | `--refs, -r "7 0 1"` | Referans dizisini doğrudan ver |
-| `--random N` | N uzunlukta tekrarlanabilir rastgele dizi (`--pages`, `--seed` ile) |
-| `--workloads` | Düzgün rastgele, yerellik, döngüsel tarama ve karma iş yüklerinde analiz (`--length`) |
+| `--random N` | N uzunlukta tekrarlanabilir rastgele dizi (`--pages`, `--seed`) |
+| `--trace, -t DOSYA` | Bellek erişim izi: Valgrind Lackey biçimi veya satır başına bir adres (`--page-size`, vars. 4096) |
+| `--program AD` | İzlenen program: `matris_satir`, `matris_sutun`, `matris_carpim`, `quicksort`, `ikili_arama` (`--page-size`, vars. 512) |
+| `--workloads` | Sentetik iş yükü analizi (`--length`) |
+| `--experiment` | Tüm izlenen programlarda deney (vars. 1–40 çerçeve) |
 | `--frames, -k K` | Çerçeve sayısı |
-| `--range MIN MAX` | MIN..MAX çerçeve için hata sayıları, Belady tespiti, SVG grafik |
-| `--algo, -a ...` | Sadece seçilen algoritmalar: `fifo lru optimal clock lfu` |
-| `--step` | Canlı demo modu (Enter: ilerle, `a`: sona kadar oynat, `q`: çık) |
-| `--summary, -s` | Adım tablolarını gizle, sadece özet |
-| `--out, -o KLASÖR` | Çıktı klasörü (varsayılan `results/`) |
-| `--no-export` | Dosya yazma |
-| `--save-refs DOSYA` | Kullanılan diziyi dosyaya kaydet (rastgele diziyi saklamak için) |
-| `--open` | Üretilen `rapor.html` dosyasını tarayıcıda aç |
-| `--no-color`, `--no-notes` | Renksiz çıktı / algoritma durum sütununu gizle |
+| `--range MIN MAX` | Çerçeve aralığı analizi, Belady tespiti, SVG grafik |
+| `--algo, -a ...` | Sadece seçilen algoritmalar: `fifo lru optimal clock lfu aging` |
+| `--step` | Canlı demo (Enter: ilerle, `a`: sona kadar oynat, `q`: çık) |
+| `--summary, -s` | Adım tablolarını gizle |
+| `--open` | `rapor.html` dosyasını tarayıcıda aç |
+| `--out, -o KLASÖR` | Çıktı klasörü (vars. `results/`) |
+| `--no-export`, `--no-color`, `--no-notes`, `--no-collapse`, `--save-refs DOSYA` | Diğer |
 
-Girdi dosyası biçimi: sayılar boşluk, virgül, noktalı virgül veya satır sonuyla ayrılır;
-`#` sonrası yorumdur. Boş girdi, negatif veya tam sayı olmayan değer ve geçersiz çerçeve
-sayısı satır/sıra bilgisiyle reddedilir (çıkış kodu 2).
+Girdi dosyası: sayılar boşluk, virgül, noktalı virgül veya satır sonuyla ayrılır; `#` sonrası yorumdur.
+Boş girdi, negatif / tam sayı olmayan değer ve geçersiz çerçeve sayısı konum bilgisiyle reddedilir (çıkış kodu 2).
+500 erişimden uzun dizilerde adım tabloları atlanır ve hızlı mod kullanılır.
 
-## Test senaryosu ve sonuçlar
+## Sonuçlar
 
-Referans dizisi: `3 5 3 0 5 6 5 1 5 1 3 1 4 2 1 0 5 2 0 5` — 20 erişim, 7 farklı sayfa — **3 çerçeve**
+**Test senaryosu** — `3 5 3 0 5 6 5 1 5 1 3 1 4 2 1 0 5 2 0 5`, 3 çerçeve:
 
-| Algoritma | Toplam Erişim | Sayfa Hatası | İsabet | İsabet Oranı | OPT'a fark |
-|---|---:|---:|---:|---:|---:|
-| Optimal | 20 | 8 | 12 | %60,0 | 0 |
-| LFU | 20 | 10 | 10 | %50,0 | +2 |
-| LRU | 20 | 11 | 9 | %45,0 | +3 |
-| Clock | 20 | 12 | 8 | %40,0 | +4 |
-| FIFO | 20 | 13 | 7 | %35,0 | +5 |
+| Algoritma | Sayfa hatası | İsabet | İsabet oranı | Optimal'e fark |
+|---|---:|---:|---:|---:|
+| Optimal | 8 | 12 | %60,0 | 0 |
+| LFU | 10 | 10 | %50,0 | +2 |
+| LRU | 11 | 9 | %45,0 | +3 |
+| Clock | 12 | 8 | %40,0 | +4 |
+| Aging | 12 | 8 | %40,0 | +4 |
+| FIFO | 13 | 7 | %35,0 | +5 |
 
-Adım adım çözüm: [`docs/adim_adim_cozum.md`](docs/adim_adim_cozum.md).
+Adım adım çözüm: [`docs/adim_adim_cozum.md`](docs/adim_adim_cozum.md)
 
-**Belady anomalisi** (`data/belady.txt`: `5 2 3 4 5 2 1 5 2 3 2 4 1`): FIFO 3 çerçevede **9**,
-4 çerçevede **10** sayfa hatası verir. LRU ve Optimal yığın (stack) algoritmaları olduğu için
-anomali göstermez; bu özellik 100 rastgele senaryoda test edilir.
+**Belady anomalisi** — `5 2 3 4 5 2 1 5 2 3 2 4 1`: FIFO 3 çerçevede 9, 4 çerçevede 10 hata.
 
-## Çıktılar (`results/`)
+**Gerçek program izleri** (sayfa 512 B, 1–40 çerçeve):
 
-| Dosya | İçerik |
-|---|---|
-| `rapor.html` | **Etkileşimli rapor**: özet kartlar, karşılaştırma, adım adım oynatıcı (← → / boşluk), çerçeve–hata grafiği, Belady kontrolü, algoritma bazında adım tabloları. Tek dosya, internet gerektirmez |
-| `calisma_logu.txt` | Her çalıştırmanın konsol çıktısı, zaman damgalı (renksiz) |
-| `adimlar.csv` | Her algoritmanın her adımı: çerçeveler, HIT/MISS, çıkan sayfa, karar açıklaması |
-| `ozet.csv`, `sonuclar.json` | Toplam erişim, hata, isabet, oranlar |
-| `cerceve_analizi.csv`, `grafik_cerceve_hata.svg` | Çerçeve sayısı–hata tablosu ve grafiği (Belady bölgesi işaretli) |
-| `is_yuku_analizi.csv`, `grafik_<iş yükü>.svg` | İş yükü performans analizi |
+- Aynı matrisi sütun sütun toplamak, 8 çerçevede satır satır toplamaya göre **48 kat** fazla sayfa hatası üretir.
+- Belady anomalisi gerçek izlerde de görülür: Clock (quicksort, matris çarpımı), LFU (quicksort, ikili arama), Aging (matris çarpımı). LRU ve Optimal hiçbirinde göstermez.
+- LFU quicksort izinde 8 çerçevede 12.658 hata yapar; LRU 281, Aging 275.
 
-CSV dosyaları `;` ayraçlı ve UTF-8 BOM'ludur; Excel'de doğrudan Türkçe karakterlerle açılır.
-SVG grafikler tarayıcıda açılır; noktaların üzerine gelince değer görünür.
+Ayrıntılı yorum final raporundadır.
 
 ## Mimari
 
 ```
-main.py                    CLI: argümanlar, mod seçimi, konsol + log çıktısı
+main.py                    CLI: argümanlar, menü, mod seçimi, konsol + log
 simulator/
-  core.py                  Step, SimulationResult, PageReplacementAlgorithm (ortak arayüz), kayıt
-  fifo.py   clock.py       FIFO (deque), Second Chance (referans biti + dairesel el)
-  lru.py    lfu.py         LRU (OrderedDict), LFU (sayaç + FIFO eşitlik bozma)
-  optimal.py               Optimal: tek geri geçişte O(n) sonraki kullanım tablosu
-  input_io.py              Dosya/metin ayrıştırma, doğrulama, tekrarlanabilir iş yükü üreteçleri
+  core.py                  Step, SimulationResult, PageReplacementAlgorithm (ortak arayüz), kayıt, hızlı mod
+  fifo.py  lru.py  optimal.py  clock.py  lfu.py  aging.py
+  input_io.py              Dosya/metin ayrıştırma, doğrulama, iş yükü üreteçleri
+  trace.py                 Adres izi okuma (Lackey / düz), izlenen programlar
   analysis.py              Çerçeve aralığı, Belady tespiti, OPT alt sınır kontrolü, iş yükü analizi
-  display.py               Adım tablosu, ızgara görünümü, karşılaştırma, renkli konsol
-  export.py                CSV, JSON, SVG grafik, çalışma logu
-  html_report.py           Tek dosyalık etkileşimli HTML rapor
-tests/                     43 birim/entegrasyon testi (unittest)
-.github/workflows/         CI: her push'ta testler Ubuntu ve Windows'ta
-data/                      ornek.txt, belady.txt, hatali_ornek.txt
-docs/                      adım adım çözüm, ara sunum rehberi, öneri formu (revizyon)
+  display.py               Adım tablosu, ızgara, karşılaştırma, renkli konsol
+  export.py                CSV, JSON, SVG grafik, log
+  html_report.py           Etkileşimli HTML rapor
+tests/                     59 test (unittest)
+data/                      ornek.txt, belady.txt, hatali_ornek.txt, izler/matris_carpim_8.lackey
+docs/                      adım adım çözüm, sunum rehberi, öneri formu, GitHub yükleme
 ```
 
-**Ortak arayüz (Template Method).** Çerçeve tablosu, HIT/MISS kararı ve adım kaydı
-`PageReplacementAlgorithm.run()` içinde tek yerde yapılır. Her algoritma sadece
-"bellek doluyken hangi sayfa çıkarılmalı?" sorusunu (`choose_victim`) ve kendi veri yapısını
-güncelleyen kancaları (`on_hit`, `on_load`, `on_evict`) uygular. Yeni bir algoritma eklemek
-için tek dosya ve `@register("ad")` yeterlidir; karşılaştırma, analiz, görüntüleme ve dışa
-aktarma kodu değişmez.
+Çerçeve tablosu ve HIT/MISS kararı `PageReplacementAlgorithm.run()` içinde tek yerde yapılır
+(Template Method). Algoritmalar yalnızca `choose_victim` ve veri yapısı kancalarını
+(`on_hit`, `on_load`, `on_evict`, `on_reference`) uygular. Yeni algoritma = tek dosya + `@register`.
 
-**Karmaşıklık** (n = erişim sayısı, k = çerçeve sayısı):
-
-| Algoritma | Erişim başına | Not |
+| Algoritma | Veri yapısı | Maliyet |
 |---|---|---|
-| FIFO | O(1) | deque |
-| LRU | O(1) | OrderedDict.move_to_end |
-| Clock | amortize O(1), en kötü O(k) | el en fazla iki tur döner |
-| LFU | O(k) hata başına | sayaç sözlüğünde minimum |
-| Optimal | O(k) hata başına | sonraki kullanım tablosu O(n) ön hesap; naif yöntem hata başına O(n) |
-
-## Doğrulama
-
-- Grup senaryosu için 5 algoritmanın beklenen değerleri ve çıkarılan sayfa sırası
-- Silberschatz ders kitabı örneğinin yayımlanmış sonuçları (FIFO 15, LRU 12, OPT 9)
-- **200 tekrarlanabilir rastgele senaryoda** FIFO/LRU/OPT, ayrı yazılmış basit (naif) uygulamalarla çapraz kontrol
-- 200 senaryoda Optimal'in tüm algoritmalar için alt sınır olduğu
-- LRU ve Optimal'de Belady anomalisinin hiç oluşmadığı (yığın özelliği)
-- Sınır durumları: 1 çerçeve, yeterli çerçeve, tek erişim, aynı sayfa tekrarı
-- Girdi hataları, dosya okuma, CSV/SVG/JSON/HTML çıktıları ve CLI çıkış kodları
-- Her push'ta GitHub Actions ile Ubuntu + Windows, Python 3.10 ve 3.12 üzerinde otomatik test
+| FIFO | `deque` | O(1) |
+| LRU | `OrderedDict` | O(1) |
+| Optimal | Sonraki kullanım tablosu (tek geri geçiş, O(n)) | Hata başına O(k) |
+| Clock | Referans biti + dairesel el | Amortize O(1) |
+| LFU | Sayaç + yükleme zamanı | Hata başına O(k) |
+| Aging | 8 bitlik sayaç + R biti, periyodik tik | Tik başına O(k) |
 
 ## Geliştirme süreci
 
-Proje tek kişi tarafından geliştirilmiştir. Her bileşen ayrı bir `feature/*` dalında geliştirilip
-`--no-ff` merge ile `main`'e alınmıştır; commit geçmişi modül sırasını izler:
-ortak arayüz → FIFO → LRU → Optimal → girdi/görselleştirme → analiz → dışa aktarma →
-Clock → LFU → HTML rapor → testler/CI → dokümantasyon.
-
-## Yol haritası
-
-Final teslimine kadar (kalan ~%20):
-
-- [ ] Final raporu (yöntem, deneyler, iş yükü analizinin yorumu)
-- [ ] Final sunumu
-- [ ] Ek politika: NRU / Aging (Clock'un çok bitli genellemesi)
-- [ ] Gerçek bir programdan alınmış bellek erişim izi (trace) dosyasıyla deney
+Her bileşen ayrı bir `feature/*` dalında geliştirilip `--no-ff` merge ile `main`'e alınmıştır:
+ortak arayüz → FIFO → LRU → Optimal → girdi/CLI → Clock/LFU → HTML rapor → testler/CI →
+Aging → iz deneyi → final dokümantasyon. Etiketler: `v0.8-ara-teslim`, `v1.0-final`.

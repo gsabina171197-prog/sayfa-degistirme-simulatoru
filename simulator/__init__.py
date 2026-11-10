@@ -6,4 +6,4 @@ from .core import (  # noqa: F401
 # Import order = default display order (registration happens on import).
 from . import fifo, lru, optimal, clock, lfu, aging  # noqa: F401,E402
 
-__version__ = "0.8.0"
+__version__ = "1.0.0"
