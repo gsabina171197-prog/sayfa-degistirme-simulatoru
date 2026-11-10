@@ -1,0 +1,2 @@
+# Giriş kontrolü gösterimi: geçersiz değer içerir
+3 5 -1 0 a 6

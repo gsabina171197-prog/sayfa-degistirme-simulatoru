@@ -1,0 +1,3 @@
+# Belady anomalisi senaryosu (FIFO): 3 çerçeve -> 9 hata, 4 çerçeve -> 10 hata
+# Önerilen çalıştırma: python main.py --file data/belady.txt --range 1 6
+5 2 3 4 5 2 1 5 2 3 2 4 1

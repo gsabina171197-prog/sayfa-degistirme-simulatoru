@@ -1,0 +1,4 @@
+# Grubumuzun test senaryosu — 20 erişim, 7 farklı sayfa (0-6)
+# Önerilen çalıştırma: python main.py --file data/ornek.txt --frames 3
+3 5 3 0 5 6 5 1 5 1
+3 1 4 2 1 0 5 2 0 5
