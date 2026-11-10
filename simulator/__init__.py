@@ -4,6 +4,6 @@ from .core import (  # noqa: F401
     available_algorithms, create, run_all, validate_input,
 )
 # Import order = default display order (registration happens on import).
-from . import fifo, lru  # noqa: F401,E402
+from . import fifo, lru, optimal  # noqa: F401,E402
 
 __version__ = "0.8.0"
