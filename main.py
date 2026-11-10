@@ -42,8 +42,8 @@ class Output:
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="main.py",
-        description="FIFO, LRU, Optimal, Clock ve LFU sayfa değiştirme algoritmalarını "
-                    "aynı girdi üzerinde adım adım çalıştırır ve karşılaştırır.",
+        description="FIFO, LRU, Optimal, Clock, LFU ve Aging sayfa değiştirme "
+                    "algoritmalarını aynı girdide adım adım karşılaştırır.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="Örnekler:" + __doc__.split("Örnekler:", 1)[1],
     )
@@ -254,12 +254,12 @@ def run_step(refs, args, out: Output) -> None:
 
 
 MENU = [
-    ("Örnek senaryo — 5 algoritma, adım tabloları, karşılaştırma, HTML rapor",
+    ("Örnek senaryo — 6 algoritma, adım tabloları, karşılaştırma, HTML rapor",
      ["--file", "data/ornek.txt", "--frames", "3", "--open"]),
     ("Canlı adım adım demo (Enter ile ilerle)", ["--file", "data/ornek.txt", "--frames", "3", "--step"]),
     ("Belady anomalisi — çerçeve aralığı analizi", ["--file", "data/belady.txt", "--range", "1", "6"]),
     ("İş yükü performans analizi", ["--workloads", "--range", "2", "8", "--summary"]),
-    ("Gerçek program izleri deneyi (matris, quicksort, ikili arama)", ["--experiment"]),
+    ("Algoritma erişim izleri deneyi (matris, quicksort, ikili arama)", ["--experiment"]),
     ("Valgrind izi okuma örneği", ["--trace", "data/izler/matris_carpim_8.lackey", "--page-size", "256", "--range", "1", "8"]),
     ("Hatalı girdi kontrolü", ["--file", "data/hatali_ornek.txt", "--frames", "3"]),
 ]

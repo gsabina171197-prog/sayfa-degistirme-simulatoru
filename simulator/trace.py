@@ -8,10 +8,11 @@
           M 0421c7f0,4      modify (load + store)
    * Plain format: one address per line, hexadecimal (0x...) or decimal.
    The page number is address // page_size. Consecutive references to the same
-   page can be collapsed: they are hits for every policy, so they change the
-   hit ratio but never the fault count of FIFO/LRU/OPT/Clock.
+   page can optionally be collapsed. This preserves many policies' page-fault
+   counts but can change frequency/aging-dependent behavior (LFU, Aging).
+   Use --no-collapse when studying those details.
 
-2. Instrumented programs
+2. Instrumented example programs
    Small, real algorithms (matrix traversal, matrix multiply, quicksort, binary
    search) run on arrays that record the virtual address of every element they
    touch. This produces genuine access patterns with known locality, without
