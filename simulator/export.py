@@ -24,6 +24,7 @@ SERIES = {
     "OPT":   ("#1baf7a", "",      "diamond"),
     "CLOCK": ("#c98500", "2 3",   "triangle"),
     "LFU":   ("#d55181", "8 3 2 3", "circle-open"),
+    "AGING": ("#6250d6", "1 3",   "square-open"),
 }
 
 
@@ -125,6 +126,9 @@ def _marker(shape: str, x: float, y: float, color: str) -> str:
     if shape == "triangle":
         return (f'<path d="M{x:.1f} {y - r - 1:.1f} L{x + r + 1:.1f} {y + r:.1f} '
                 f'L{x - r - 1:.1f} {y + r:.1f}Z" fill="{color}"/>')
+    if shape == "square-open":
+        return (f'<rect x="{x - r + 0.5:.1f}" y="{y - r + 0.5:.1f}" width="{2 * r - 1}" height="{2 * r - 1}" '
+                f'fill="#fcfcfb" stroke="{color}" stroke-width="2"/>')
     if shape == "circle-open":
         return f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{r - 0.5}" fill="#fcfcfb" stroke="{color}" stroke-width="2"/>'
     return f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{r}" fill="{color}"/>'
