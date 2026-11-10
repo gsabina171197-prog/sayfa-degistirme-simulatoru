@@ -6,6 +6,7 @@ Author: Sabina Gasimova
 from __future__ import annotations
 
 import csv
+import math
 import json
 from datetime import datetime
 from pathlib import Path
@@ -86,6 +87,19 @@ def write_workload_csv(reports: List[WorkloadReport], out_dir: str) -> Path:
     return path
 
 
+def write_experiment_csv(tables: dict, lo: int, out_dir: str) -> Path:
+    path = _dir(out_dir) / "deney_izler.csv"
+    with path.open("w", newline="", encoding="utf-8-sig") as f:
+        w = csv.writer(f, delimiter=";")
+        w.writerow(["program", "bellek_erisimi", "sayfa_referansi", "farkli_sayfa",
+                    "cerceve", "algoritma", "sayfa_hatasi"])
+        for key, (label, t, refs, table, found) in tables.items():
+            for algo, faults in table.items():
+                for i, x in enumerate(faults):
+                    w.writerow([key, len(t.addresses), len(refs), len(set(refs)), lo + i, algo, x])
+    return path
+
+
 def write_json(path_dir: str, payload: dict, name: str = "sonuclar.json") -> Path:
     path = _dir(path_dir) / name
     payload = {"olusturulma": datetime.now().isoformat(timespec="seconds"), **payload}
@@ -143,13 +157,31 @@ def svg_line_chart(table: Dict[str, List[int]], lo: int, chart_title: str,
     n = len(next(iter(table.values())))
     xs = list(range(lo, lo + n))
     y_max = max(max(v) for v in table.values())
-    step = 1 if y_max <= 10 else 2 if y_max <= 20 else 5 if y_max <= 50 else 10 if y_max <= 100 else 50
-    y_top = ((y_max // step) + 1) * step
+    y_min = min(min(v) for v in table.values())
+    use_log = y_min > 0 and y_max / y_min > 50          # wide spread: log scale
+    if use_log:
+        lo_dec = 10 ** math.floor(math.log10(y_min))
+        hi_dec = 10 ** math.ceil(math.log10(y_max))
+        ticks = []
+        d = lo_dec
+        while d <= hi_dec:
+            ticks.append(d)
+            d *= 10
+        span = math.log10(hi_dec) - math.log10(lo_dec)
+    else:
+        raw = max(1, y_max) / 5
+        mag = 10 ** math.floor(math.log10(raw))
+        step = next(m * mag for m in (1, 2, 5, 10) if m * mag >= raw)
+        step = max(1, int(step))
+        y_top = ((y_max // step) + 1) * step
+        ticks = list(range(0, y_top + 1, step))
 
     def X(k: int) -> float:
         return L + (pw * (k - lo) / (n - 1) if n > 1 else pw / 2)
 
     def Y(v: float) -> float:
+        if use_log:
+            return T + ph * (1 - (math.log10(max(v, lo_dec)) - math.log10(lo_dec)) / span)
         return T + ph * (1 - v / y_top)
 
     o = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" '
@@ -159,23 +191,24 @@ def svg_line_chart(table: Dict[str, List[int]], lo: int, chart_title: str,
     if subtitle:
         o.append(f'<text x="{L}" y="50" font-size="12" fill="#52514e">{escape(subtitle)}</text>')
     # grid + y axis
-    for v in range(0, y_top + 1, step):
+    for v in ticks:
         y = Y(v)
         o.append(f'<line x1="{L}" y1="{y:.1f}" x2="{L + pw}" y2="{y:.1f}" stroke="#e4e3df" stroke-width="1"/>')
         o.append(f'<text x="{L - 8}" y="{y + 4:.1f}" font-size="11" fill="#52514e" text-anchor="end">{v}</text>')
+    every = 1 if n <= 16 else 2 if n <= 30 else 5
     for k in xs:
+        if (k - lo) % every and k != xs[-1]:
+            continue
         o.append(f'<text x="{X(k):.1f}" y="{T + ph + 20}" font-size="11" fill="#52514e" text-anchor="middle">{k}</text>')
     o.append(f'<text x="{L + pw / 2}" y="{H - 14}" font-size="12" fill="#52514e" text-anchor="middle">Çerçeve sayısı</text>')
     o.append(f'<text transform="translate(18 {T + ph / 2}) rotate(-90)" font-size="12" fill="#52514e" '
-             f'text-anchor="middle">{escape(y_label)}</text>')
+             f'text-anchor="middle">{escape(y_label + (" (log ölçek)" if use_log else ""))}</text>')
     # anomaly bands
     for a in anomalies:
         x1, x2 = X(a.frames_before), X(a.frames_after)
         o.append(f'<rect x="{x1:.1f}" y="{T}" width="{x2 - x1:.1f}" height="{ph}" fill="#e34948" opacity="0.08">'
                  f'<title>Belady anomalisi ({escape(a.algorithm)}): {a.frames_before}→{a.frames_after} çerçeve, '
                  f'{a.faults_before}→{a.faults_after} hata</title></rect>')
-        o.append(f'<text x="{(x1 + x2) / 2:.1f}" y="{T - 6}" font-size="11" fill="#b42318" text-anchor="middle">'
-                 f'Belady ({escape(a.algorithm)})</text>')
     # series
     for name, values in table.items():
         color, dash, shape = SERIES.get(name, ("#6250d6", "", "circle"))
@@ -201,6 +234,10 @@ def svg_line_chart(table: Dict[str, List[int]], lo: int, chart_title: str,
         o.append(_marker(shape, lx + 11, T - 44, color))
         o.append(f'<text x="{lx + 28}" y="{T - 40}" font-size="12" fill="#0b0b0b">{escape(name)}</text>')
         lx += 40 + 8 * len(name) + 18
+    if anomalies:
+        names = ", ".join(sorted({a.algorithm for a in anomalies}))
+        o.append(f'<rect x="{lx}" y="{T - 51}" width="14" height="14" fill="#e34948" opacity="0.25"/>')
+        o.append(f'<text x="{lx + 20}" y="{T - 40}" font-size="12" fill="#b42318">Belady: {escape(names)}</text>')
     o.append("</svg>")
     return "\n".join(o)
 

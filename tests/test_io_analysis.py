@@ -134,7 +134,7 @@ class CLITests(unittest.TestCase):
     def test_menu_definitions_are_valid(self):
         for _, argv in main.MENU:
             args = main.build_parser().parse_args(argv)
-            self.assertTrue(args.file or args.workloads)
+            self.assertTrue(args.file or args.workloads or args.experiment or args.trace)
 
     def test_range_mode_reports_belady(self):
         with tempfile.TemporaryDirectory() as d:

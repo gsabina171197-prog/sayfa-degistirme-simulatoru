@@ -156,9 +156,16 @@ def bar_chart(results: List[SimulationResult], width: int = 40) -> str:
     return "\n".join(out)
 
 
-def range_table(table_: Dict[str, List[int]], lo: int) -> str:
+def pick_columns(table_: Dict[str, List[int]], lo: int, columns: Sequence[int]) -> Dict[str, List[int]]:
     hi = lo + len(next(iter(table_.values()))) - 1
-    headers = ["Algoritma"] + [f"{k} çerçeve" for k in range(lo, hi + 1)]
+    keep = [k for k in columns if lo <= k <= hi]
+    return {a: [v[k - lo] for k in keep] for a, v in table_.items()}
+
+
+def range_table(table_: Dict[str, List[int]], lo: int, columns: Sequence[int] = ()) -> str:
+    hi = lo + len(next(iter(table_.values()))) - 1
+    cols = list(columns) or list(range(lo, hi + 1))
+    headers = ["Algoritma"] + [f"{k} çerçeve" for k in cols]
     rows = []
     for name, faults in table_.items():
         cells = [name]
@@ -171,15 +178,39 @@ def range_table(table_: Dict[str, List[int]], lo: int) -> str:
     return table(headers, rows, right_cols=tuple(range(1, len(headers))))
 
 
-def anomalies(found: List[Anomaly]) -> str:
+def anomalies(found: List[Anomaly], limit: int = 6) -> str:
     if not found:
         return Style.green("✓ Belady anomalisi tespit edilmedi.")
     lines = [Style.red(Style.bold("⚠ Belady anomalisi tespit edildi:"))]
-    for a in found:
+    for a in found[:limit]:
         lines.append(f"  • {a.algorithm}: {a.frames_before} çerçeve → {a.faults_before} hata, "
                      f"{a.frames_after} çerçeve → {a.faults_after} hata "
                      f"(çerçeve arttı, hata {a.faults_after - a.faults_before} arttı)")
+    if len(found) > limit:
+        lines.append(Style.dim(f"  … ve {len(found) - limit} durum daha (CSV / grafikte tamamı)"))
     return "\n".join(lines)
+
+
+def experiment_summary(rows, lo: int) -> str:
+    """rows: (label, n_refs, n_pages, table, anomalies)."""
+    algos = list(rows[0][3])
+    headers = ["Program", "Referans", "Sayfa"] + [f"{a} ort." for a in algos] + ["Belady"]
+    out = []
+    for label, n, pages, tbl, found in rows:
+        avg = {a: sum(v) / len(v) for a, v in tbl.items()}
+        best = min(avg[a] for a in algos if a != "OPT") if len(algos) > 1 else None
+        cells = [label, str(n), str(pages)]
+        for a in algos:
+            txt = f"{avg[a]:.0f}"
+            if a != "OPT" and avg[a] == best:
+                txt = Style.green(txt + " ★")
+            cells.append(txt)
+        cells.append(", ".join(sorted({x.algorithm for x in found})) or "—")
+        out.append(cells)
+    return "\n".join([
+        table(headers, out, right_cols=tuple(range(1, len(headers) - 1))),
+        Style.dim("Ortalama = çerçeve aralığı boyunca ortalama sayfa hatası; ★ = OPT hariç en iyi"),
+    ])
 
 
 def workload_summary(reports: List[WorkloadReport]) -> str:

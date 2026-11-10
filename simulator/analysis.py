@@ -34,7 +34,7 @@ def frame_range(references: Sequence[int], lo: int, hi: int,
     table: Dict[str, List[int]] = {}
     for key in keys:
         algo = create(key)
-        table[algo.short_name] = [algo.run(references, k).faults for k in range(lo, hi + 1)]
+        table[algo.short_name] = [algo.run(references, k, record=False).faults for k in range(lo, hi + 1)]
     return table
 
 
