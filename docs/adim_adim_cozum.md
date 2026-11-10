@@ -1,20 +1,21 @@
-# Adım Adım Çözüm — Grup Test Senaryosu
+# Adım Adım Çözüm — Test Senaryosu
 
 Referans dizisi: `3 5 3 0 5 6 5 1 5 1 3 1 4 2 1 0 5 2 0 5` (20 erişim, 7 farklı sayfa), **3 çerçeve**.
 
-Tablolarda `*` o adımda sayfanın yüklendiği çerçeveyi, `F` sayfa hatasını gösterir. Son sütun, algoritmanın kararını verdiği veri yapısının adım sonundaki durumudur. Tablolar simülatörün çıktısıdır; aynı değerler `tests/test_algorithms.py` içinde beklenen sonuç olarak test edilir ve FIFO, LRU, OPT ayrıca bağımsız yazılmış basit uygulamalarla çapraz doğrulanır.
+Tablolarda `*` o adımda sayfanın yüklendiği çerçeveyi, `F` sayfa hatasını gösterir. Son sütun, algoritmanın kararını verdiği veri yapısının adım sonundaki durumudur. Aynı değerler `tests/test_algorithms.py` içinde beklenen sonuç olarak test edilir; FIFO, LRU ve Optimal ayrıca bağımsız yazılmış basit uygulamalarla çapraz doğrulanır.
 
 | Algoritma | Sayfa hatası | İsabet | İsabet oranı |
 |---|---|---|---|
-| FIFO | 13 | 7 | %35,0 |
-| LRU | 11 | 9 | %45,0 |
 | OPT | 8 | 12 | %60,0 |
-| CLOCK | 12 | 8 | %40,0 |
 | LFU | 10 | 10 | %50,0 |
+| LRU | 11 | 9 | %45,0 |
+| CLOCK | 12 | 8 | %40,0 |
+| AGING | 12 | 8 | %40,0 |
+| FIFO | 13 | 7 | %35,0 |
 
 ## First-In First-Out (FIFO) — 13 sayfa hatası
 
-Kurban her zaman kuyruğun başındaki (en önce yüklenen) sayfadır. Kullanım sıklığı dikkate alınmaz: 5. adımda kullanılan 5, 8. adımda yine çıkarılır.
+Kurban her zaman kuyruğun başındaki (en önce yüklenen) sayfadır. Kullanım bilgisi dikkate alınmaz: 7. adımda kullanılan 5, 8. adımda çıkarılır.
 
 ```
 Ref :  3  5  3  0  5  6  5  1  5  1  3  1  4  2  1  0  5  2  0  5
@@ -224,5 +225,48 @@ Hata:  F  F  ·  F  ·  F  ·  F  ·  ·  ·  ·  F  F  ·  F  ·  F  F  ·   (F
 |   19 |     0 | 0* | 5  | 1  | MISS  | 2     | sayaç: 0×1 5×5 1×4 |
 |   20 |     5 | 0  | 5  | 1  | HIT   |       | sayaç: 0×1 5×6 1×4 |
 +------+-------+----+----+----+-------+-------+--------------------+
+```
+</details>
+
+## Aging (8 bit) (AGING) — 12 sayfa hatası
+
+Her sayfanın R biti ve 8 bitlik sayacı vardır (`sayfa:R|sayaç`). Her 2 erişimde bir saat tik'i olur: sayaç sağa kayar, R en anlamlı bite yazılır, R sıfırlanır. Kurban en küçük (R, sayaç) değerine sahip sayfadır.
+
+```
+Ref :  3  5  3  0  5  6  5  1  5  1  3  1  4  2  1  0  5  2  0  5
+      -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+Ç0  :  3  3  3  3  3  3  3  1  1  1  1  1  1  1  1  1  1  1  0  0
+Ç1  :  .  5  5  5  5  5  5  5  5  5  5  5  4  4  4  0  0  2  2  2
+Ç2  :  .  .  .  0  0  6  6  6  6  6  3  3  3  2  2  2  5  5  5  5
+Hata:  F  F  ·  F  ·  F  ·  F  ·  ·  F  ·  F  F  ·  F  F  F  F  ·   (F = sayfa hatası)
+```
+
+<details><summary>Ayrıntılı adım tablosu</summary>
+
+```
++------+-------+----+----+----+-------+-------+-------------------------------------------------+
+| Adım | Sayfa | Ç0 | Ç1 | Ç2 | Sonuç | Çıkan | Algoritma durumu                                |
++======+=======+====+====+====+=======+=======+=================================================+
+|    1 |     3 | 3* | -  | -  | MISS  |       | R|sayaç: 3:1|00000000                           |
+|    2 |     5 | 3  | 5* | -  | MISS  |       | R|sayaç: 3:0|10000000 5:0|10000000              |
+|    3 |     3 | 3  | 5  | -  | HIT   |       | R|sayaç: 3:1|10000000 5:0|10000000              |
+|    4 |     0 | 3  | 5  | 0* | MISS  |       | R|sayaç: 3:0|11000000 5:0|01000000 0:0|10000000 |
+|    5 |     5 | 3  | 5  | 0  | HIT   |       | R|sayaç: 3:0|11000000 5:1|01000000 0:0|10000000 |
+|    6 |     6 | 3  | 5  | 6* | MISS  | 0     | R|sayaç: 3:0|01100000 5:0|10100000 6:0|10000000 |
+|    7 |     5 | 3  | 5  | 6  | HIT   |       | R|sayaç: 3:0|01100000 5:1|10100000 6:0|10000000 |
+|    8 |     1 | 1* | 5  | 6  | MISS  | 3     | R|sayaç: 1:0|10000000 5:0|11010000 6:0|01000000 |
+|    9 |     5 | 1  | 5  | 6  | HIT   |       | R|sayaç: 1:0|10000000 5:1|11010000 6:0|01000000 |
+|   10 |     1 | 1  | 5  | 6  | HIT   |       | R|sayaç: 1:0|11000000 5:0|11101000 6:0|00100000 |
+|   11 |     3 | 1  | 5  | 3* | MISS  | 6     | R|sayaç: 1:0|11000000 5:0|11101000 3:1|00000000 |
+|   12 |     1 | 1  | 5  | 3  | HIT   |       | R|sayaç: 1:0|11100000 5:0|01110100 3:0|10000000 |
+|   13 |     4 | 1  | 4* | 3  | MISS  | 5     | R|sayaç: 1:0|11100000 4:1|00000000 3:0|10000000 |
+|   14 |     2 | 1  | 4  | 2* | MISS  | 3     | R|sayaç: 1:0|01110000 4:0|10000000 2:0|10000000 |
+|   15 |     1 | 1  | 4  | 2  | HIT   |       | R|sayaç: 1:1|01110000 4:0|10000000 2:0|10000000 |
+|   16 |     0 | 1  | 0* | 2  | MISS  | 4     | R|sayaç: 1:0|10111000 0:0|10000000 2:0|01000000 |
+|   17 |     5 | 1  | 0  | 5* | MISS  | 2     | R|sayaç: 1:0|10111000 0:0|10000000 5:1|00000000 |
+|   18 |     2 | 1  | 2* | 5  | MISS  | 0     | R|sayaç: 1:0|01011100 2:0|10000000 5:0|10000000 |
+|   19 |     0 | 0* | 2  | 5  | MISS  | 1     | R|sayaç: 0:1|00000000 2:0|10000000 5:0|10000000 |
+|   20 |     5 | 0  | 2  | 5  | HIT   |       | R|sayaç: 0:0|10000000 2:0|01000000 5:0|11000000 |
++------+-------+----+----+----+-------+-------+-------------------------------------------------+
 ```
 </details>
